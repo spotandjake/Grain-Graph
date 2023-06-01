@@ -1,0 +1,88 @@
+/*!
+ * The Work In This File Is Largely Based On:
+ * graph.js - Graph
+ * MIT License (c) 2014
+ * https://github.com/codenameyau/graph.js
+ *
+ * Description:
+ * Library for weighted directed graphs
+ *
+ * The Graph is implemented as followed:
+ * Graph (obj) -> Vertex (obj) -> Neighbor (obj) -> Weight (number)
+ */
+module Graph
+
+include "Map"
+// Graph DataStructure
+provide type GraphStore = Map.Map<String, Map.Map<String, Number>>
+provide record Graph {
+  graphStore: GraphStore,
+}
+// Methods
+provide let make = () => {
+  let graph = Map.make()
+  { graphStore: graph, }
+}
+provide let size = graph => {
+  Map.size(graph.graphStore)
+}
+provide let sizeNeighbors = (vertex, graph) => {
+  // Try Get The Given Vertex
+  let vert = Map.get(vertex, graph.graphStore)
+  match (vert) {
+    Some(neighbors) => Map.size(neighbors),
+    None => 0,
+  }
+}
+// TODO: pathExists
+provide let hasVertex = (vertex, graph) => {
+  Map.contains(vertex, graph.graphStore)
+}
+provide let addVertex = (vertex, graph) => {
+  match (hasVertex(vertex, graph)) {
+    true => void,
+    false => Map.set(vertex, Map.make(), graph.graphStore),
+  }
+}
+provide let removeVertex = (vertex, graph) => {
+  // Remove Vertex
+  Map.remove(vertex, graph.graphStore)
+  // Remove Paths
+  Map.forEach((vert, path) => {
+    if (Map.contains(vertex, path)) {
+      Map.remove(vertex, path)
+    }
+  }, graph.graphStore)
+}
+// TODO: Add Neighbors
+// TODO: get Neighbors
+provide let hasEdge = (vertex, neighbor, graph) => {
+  let edges = match (Map.get(vertex, graph.graphStore)) {
+    Some(edges) => edges,
+    None => return false,
+  }
+  return Map.contains(neighbor, edges)
+}
+provide let addEdge = (vertex, neighbor, weight, graph) => {
+  if (!Map.contains(vertex, graph.graphStore)) {
+    addVertex(vertex, graph)
+  }
+  let edges = match (Map.get(vertex, graph.graphStore)) {
+    Some(edges) => edges,
+    None => fail "Impossible",
+  }
+  Map.set(neighbor, weight, edges)
+}
+// TODO: removeEdge
+provide let getWeight = (vertex, neighbor, weight, graph) => {
+  let edges = match (Map.get(vertex, graph.graphStore)) {
+    Some(edges) => edges,
+    None => return None,
+  }
+  return Map.get(neighbor, edges)
+}
+provide let setWeight = (vertex, neighbor, weight, graph) => {
+  // Given if we already have the edge we just set the weight in addEdge,
+  // or if we dont have the edge we create it these are the same.
+  addEdge(vertex, neighbor, weight, graph)
+}
